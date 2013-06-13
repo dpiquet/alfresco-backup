@@ -1,0 +1,9 @@
+#####################################
+#
+#    Alfresco Backup Script
+#
+#####################################
+
+This scripts creates full and incremental
+backups of Alfresco. It uses tar and bzip2
+to create archive files
