@@ -1,0 +1,61 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          alfresco
+# Required-Start:    mysql
+# Required-Stop:     
+# Should-Start:      
+# Should-Stop:       
+# X-Start-Before:    
+# X-Stop-After:      
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# X-Interactive:     false
+# Short-Description: Start Alfresco
+# Description:       Start Alfresco and soffice
+### END INIT INFO
+
+$alfDir="/opt/alfresco"
+$alfScript="alfresco.sh"
+
+ret_ok=0
+ret_err=0
+
+function do_start() {
+    cd $alfDir
+    ./$alfScript start
+}
+
+function do_stop() {
+    cd $alfDir
+    ./$alfScript stop
+}
+
+function do_restart() {
+    do_stop
+    sleep 10
+    do_start
+}
+
+case "$1" in
+	start)
+		do_start
+		exit $ret_ok
+	;;
+	stop)
+		do_stop
+		exit $ret_ok
+	;;
+        restart)
+		do_restart
+		exit $ret_ok
+	;;
+        force-reload)
+		do_restart
+		exit $ret_ok
+	;;
+	*)
+		echo "Usage: $0 start|stop"
+		exit $ret_err
+	;;
+esac
