@@ -12,14 +12,15 @@
 # Default-Stop:      0 1 6
 # X-Interactive:     false
 # Short-Description: Start Alfresco
-# Description:       Start Alfresco and soffice
+# Description:       Minimal script to start Alfresco and soffice
 ### END INIT INFO
 
 $alfDir="/opt/alfresco"
 $alfScript="alfresco.sh"
 
 ret_ok=0
-ret_err=0
+ret_err=1
+ret_invalid_args=2
 
 function do_start() {
     cd $alfDir
@@ -38,24 +39,25 @@ function do_restart() {
 }
 
 case "$1" in
-	start)
-		do_start
-		exit $ret_ok
-	;;
-	stop)
-		do_stop
-		exit $ret_ok
-	;;
-        restart)
-		do_restart
-		exit $ret_ok
-	;;
-        force-reload)
-		do_restart
-		exit $ret_ok
-	;;
-	*)
-		echo "Usage: $0 start|stop"
-		exit $ret_err
-	;;
+    start)
+        do_start
+	exit $ret_ok
+    ;;
+    stop)
+	do_stop
+	exit $ret_ok
+    ;;
+    restart)
+	do_restart
+	exit $ret_ok
+    ;;
+    force-reload)
+	do_restart
+	exit $ret_ok
+    ;;
+    # TODO: Implement status case
+    *)
+	echo "Usage: $0 start|stop"
+	exit $ret_invalid_args
+    ;;
 esac
