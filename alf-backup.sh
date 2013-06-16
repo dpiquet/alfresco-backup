@@ -6,7 +6,7 @@
 #
 #################################################################
 #
-#  Script ecrit par Damien PIQUET: damien.piquet@iutbeziers.fr || piqudam@gmail.com
+#  Script written by Damien PIQUET: damien.piquet@iutbeziers.fr || piqudam@gmail.com
 #
 #  Save user files (alf_data)
 #  Full backups
@@ -52,13 +52,14 @@ function log_msg() {
 function full_backup() {
     stop_alfresco
     if [ $? -ne $ret_ok ]; then
-    	log_msg "CRIT: Alfresco n'a pas pu etre arrete! La sauvegarde ne sera pas effectuee"
 	return $ret_err;
     fi
 
     dump_database
     if [ $? -ne $ret_ok ]; then
-        log_msg "CRIT: La sauvegarde de la base de donnees a echoue ! Abandon..."
+        log_msg "CRIT: Could not dump database ! Aborting..."
+        # we must restart Alfresco
+        start_alfresco
 	return $ret_err;
     fi
 
@@ -70,20 +71,19 @@ function full_backup() {
     # tar bzip2 all files, plus database dump
     nice -$niceVal $tar --create --preserve-permissions --bzip2 --file=$tempDir/$fullArchiveName --listed-incremental=$tempDir/$fileList $alf_dir/$alf_data_dir
     if [ $? -eq 3 ]; then
-    	log_msg "Erreur lors de la creation de l'archive $fullArchiveName !"
+    	log_msg "ERROR: Could not create $fullArchiveName !"
 	return $ret_err;
     fi
 
     # software backup
     soft_backup
     if [ $? -ne $ret_ok ]; then
-    	log_msg "Erreur lors de la creation de l'archive $softArchiveName !"
+    	log_msg "ERROR: Could not create $softArchiveName !"
 	return $ret_err;
     fi
 
     start_alfresco
     if [ $? -ne $ret_ok ]; then
-    	log_msg "CRIT: Alfresco n'a pas pu etre relance apres la sauvegarde"
 	return $ret_err;
     fi
 
@@ -94,13 +94,12 @@ function full_backup() {
 function inc_backup() {
     stop_alfresco
     if [ $? -ne $ret_ok ]; then
-    	log_msg "CRIT: Alfresco n'a pas pu etre arrete. La sauvegarde ne sera pas effectuee"
 	return $ret_err;
     fi
 
     dump_database
     if [ $? -ne $ret_ok ]; then
-    	log_msg "Erreur lors de la sauvegarde de la base de donnees !"
+    	log_msg "ERROR: Could not create database dump !"
 	return $ret_err;
     fi
 
@@ -112,7 +111,6 @@ function inc_backup() {
 
     start_alfresco
     if [ $? -ne $ret_ok ]; then
-        log_msg "CRIT: Alfresco n'a pas pu etre relance apres la sauvegarde !"
 	return $ret_err;
     fi
 
@@ -141,11 +139,15 @@ function dump_database() {
 
 function stop_alfresco() {
     if [ ! -x $alfInitScript ]; then
-    	log_msg "Erreur ! le script $alfInitScript n'existe pas ou n'est pas executable"
+    	log_msg "ERROR: $alfInitScript does not exists or is not executable"
 	return $ret_err;
     fi
 
     $alfInitScript stop
+    if [ $? -ne 0 ]; then
+	log_msg "CRIT: Could not stop Alfresco !"
+	return $ret_err;
+    fi
 
     # Wait while alfresco stops
     sleep 10
@@ -155,11 +157,15 @@ function stop_alfresco() {
 
 function start_alfresco() {
     if [ ! -x $alfInitScript ]; then
-        log_msg "Erreur ! Le script $alfInitScript n'existe pas ou n'est pas executable"
+        log_msg "ERROR: $alfInitScript does not exists or is not executable"
 	return $ret_err;
     fi
 
     $alfInitScript start
+    if [ $? -ne 0 ]; then
+	log_msg "CRIT: Could not start Alfresco !"
+	return $ret_err;
+    fi
 
     return $ret_ok
 }
