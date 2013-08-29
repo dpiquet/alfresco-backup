@@ -31,7 +31,7 @@ fileList="alf-fileList.txt"
 tempDir="/root/alf_backup"
 
 # required programs and scripts
-mysqldump="/usr/bin/mysqldump"
+mysqldump="/opt/mysql/server-5.5/bin/mysqldump"
 tar="/bin/tar"
 alfInitScript="/etc/init.d/alfresco"
 logger="/usr/bin/logger"
@@ -46,6 +46,30 @@ ret_invalid_args=2
 
 function log_msg() {
 	$logger "Alfresco backup: $1"
+}
+
+function check_required_programs() {
+    if [ ! -x $logger ]; then
+        echo "logger not found at $logger !"
+        return $ret_err;
+    fi
+
+    if [ ! -x $mysqldump ]; then
+        log_msg "mysqldump not found at $mysqldump"
+        return $ret_err;
+    fi
+
+    if [ ! -x $tar ]; then
+        log_msg "tar not found at $tar"
+        return $ret_err;
+    fi
+
+    if [ ! -x $alfInitScript ]; then
+        log_msg "Alfresco init script not found at $alfInitScript"
+        return $ret_err;
+    fi
+
+    return $ret_ok
 }
 
 # Perform full backup of alfresco
@@ -131,6 +155,7 @@ function soft_backup() {
 function dump_database() {
     $mysqldump -u $dbUser -p$dbPasswd $dbName > $alf_dir/$alf_data_dir/$dbDumpFilename
     if [ $? -ne 0 ]; then
+        echo "mysqldump ret val is $?"
 	return $ret_err;
     else
 	return $ret_ok;
@@ -169,6 +194,11 @@ function start_alfresco() {
 
     return $ret_ok
 }
+
+check_required_programs
+if [ $? -ne $ret_ok ]; then
+    exit $ret_err;
+fi
 
 case $1 in
     full)
